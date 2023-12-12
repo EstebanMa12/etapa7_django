@@ -15,7 +15,6 @@ class PostAdmin(admin.ModelAdmin):
             'fields': ('title', 'content', 'author', 'permission')
         }),
     )
-    readonly_fields = ('author',)
 
 
 #Models for teams
@@ -50,4 +49,3 @@ class CustomUserAdmin(admin.ModelAdmin):
             'fields': ('email', 'team', 'is_superuser', 'is_staff', 'is_active')
         }),
     )
-    # readonly_fields = ('email', 'team', 'is_superuser', 'is_staff', 'is_active')

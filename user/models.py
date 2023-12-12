@@ -51,3 +51,21 @@ class Post(DefaultModel, models.Model):
     def __str__(self):
         return self.title
 
+# a model for likes
+class Like(DefaultModel, models.Model):
+    # Like model
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.post.title + ' - ' + self.user.email
+    
+# a model for comments
+class Comment(DefaultModel, models.Model):
+    # Comment model
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    content = models.TextField()
+
+    def __str__(self):
+        return self.post.title + ' - ' + self.user.email + ' - ' + self.content[:20]
