@@ -38,26 +38,32 @@ class TeamAdmin(admin.ModelAdmin):
 
 #Models for users
 from .models import CustomUser
-from django.contrib.auth.forms import (
-    AdminPasswordChangeForm,
-    UserChangeForm,
-    UserCreationForm,
-)
-@admin.register(CustomUser)
-class CustomUserAdmin(admin.ModelAdmin):
+from django.contrib.auth.admin import UserAdmin
+
+
+
+class CustomUserAdmin(UserAdmin):
+    model = CustomUser
     list_display = ('id','username', 'team', 'is_superuser', 'is_staff', 'is_active')
     list_filter = ('username', 'team', 'is_superuser', 'is_staff', 'is_active')
     list_display_links = ('id', 'username')
-    search_fields = ('username', 'team__team_name')
-    ordering = ('username', 'team', 'is_superuser', 'is_staff', 'is_active')
+    search_fields = ('username', 'team')
     list_per_page = 10
-    fieldsets = (
-        (None, {
-            'fields': ('username','password','team', 'is_superuser', 'is_staff', 'is_active')
-        }),
-    )
-    change_password_form = AdminPasswordChangeForm
     
+    fieldsets = (
+        (None, {'fields': ('username',
+                       'password')}),
+        ('Personal Info', {'fields':('team',)}),
+        ('Permissions', {'fields': ('is_superuser', 'is_staff', 'is_active')}),
+    )
+    
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'password', 'team', 'is_superuser', 'is_staff', 'is_active'),
+            }),
+    )
+admin.site.register(CustomUser, CustomUserAdmin)
 
 # class UserAdmin(BaseUserAdmin):
 #     list_display = ('username',

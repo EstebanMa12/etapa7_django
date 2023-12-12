@@ -20,10 +20,9 @@ class Team(DefaultModel, models.Model):
 class CustomUser(AbstractUser):
     # Use email as the username field
     username = models.EmailField(unique=True)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, blank=True, default=None, null=True)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, blank=True, null=True)
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['password']
 
     def __str__(self):
         return self.email
