@@ -15,6 +15,10 @@ class UserHasEditPermission(BasePermission):
             return False
         
 class UserHasReadPermission(BasePermission):
+    def has_permission(self, request, view):
+        # comprueba los permisos de lectura del user
+        return request.user.is_authenticated
+        
     def has_object_permission(self, request, view, obj):
         # Comprueba cuales son los permisos de lectura del post
         if obj.read_permission == Post.PUBLIC:
