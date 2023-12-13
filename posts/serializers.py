@@ -7,4 +7,8 @@ from rest_framework import serializers
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = ('id', 'title', 'content', 'author', 'permission')
+        fields = ('title',
+                'content',
+                'author',
+                'read_permission', 
+                'edit_permission')
