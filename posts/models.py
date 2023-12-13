@@ -21,7 +21,9 @@ class Post(DefaultModel, models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
     author = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    permission = models.CharField(max_length=20, choices=PERMISSIONS, default=PUBLIC)
+    write_permission = models.CharField(max_length=20, choices=PERMISSIONS, default=PUBLIC)
+    edit_permission = models.CharField(max_length=20, choices=PERMISSIONS, default=PUBLIC)
+    
     def __str__(self):
         return self.title
 
