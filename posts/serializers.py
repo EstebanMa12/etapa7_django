@@ -10,11 +10,16 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = ('title',
                 'content',
-                'author',
                 'read_permission', 
                 'edit_permission')
         
-class PostFormSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PostForm
-        fields = '__all__'
+    def create(self, validated_data):
+        return Post.objects.create(**validated_data)
+    
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.content = validated_data.get('content', instance.content)
+        instance.read_permission = validated_data.get('read_permission', instance.read_permission)
+        instance.edit_permission = validated_data.get('edit_permission', instance.edit_permission)
+        instance.save()
+        return instance

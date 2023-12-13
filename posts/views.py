@@ -3,23 +3,63 @@
 # Create your views here.
 # POSTS
 from rest_framework import status
+from rest_framework import generics
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, BasePermission
 from posts.models import Post
-from posts.serializers import PostFormSerializer, PostSerializer
+from posts.serializers import PostSerializer
+from django.core.exceptions import ValidationError
 
-class PostCreateView(APIView):
+class AdminHasEditPermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        # Comprueba cuales son los permisos de edicion del post
+        if obj.edit_permission == Post.PUBLIC:
+            return True
+        elif obj.edit_permission == Post.AUTHENTICATED:
+            return request.user.is_authenticated
+        elif obj.edit_permission == Post.TEAM:
+            return request.user.team == obj.author.team
+        elif obj.edit_permission == Post.AUTHOR:
+            return request.user == obj.author
+        else:
+            return False
+        
+class AdminHasReadPermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        # Comprueba cuales son los permisos de lectura del post
+        if obj.read_permission == Post.PUBLIC:
+            return True
+        elif obj.read_permission == Post.AUTHENTICATED:
+            return request.user.is_authenticated
+        elif obj.read_permission == Post.TEAM:
+            return request.user.team == obj.author.team
+        elif obj.read_permission == Post.AUTHOR:
+            return request.user == obj.author
+        else:
+            return False
+
+
+# View for create POST
+class PostCreateView(generics.CreateAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
     
-    def get(self, request):
-        posts = Post.objects.all()
-        serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data)
+    def perform_create(self, serializer):
+        try:
+            serializer.save(author=self.request.user)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    def post(self, request):
-        serializer = PostFormSerializer(data=request.data)
-        if serializer.is_valid():
-            post = serializer.save(author=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# View for edit POST
+class PostEditView(generics.UpdateAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [AdminHasEditPermission]
+    lookup_field = 'id'
+    
+    def perform_update(self, serializer):
+        try:
+            serializer.save(author=self.request.user)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
