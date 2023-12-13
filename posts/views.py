@@ -35,20 +35,12 @@ class PostCreateView(generics.ListCreateAPIView):
     
     def get_queryset(self):
         queryset = Post.objects.all()
-        
         # Filtrado
         for post in list(queryset):
             object_permissions  = UserHasReadPermission()
             if not object_permissions.has_object_permission(self.request, self, post):
                 queryset = queryset.exclude(id=post.id)
         return queryset
-    # def get(self, request, *args, **kwargs): 
-    #     self.check_permissions(request)   
-    #     # Aplica el filtrado, la ordenación y la paginación a la consulta    
-    #     posts = self.filter_queryset(self.get_queryset())
-    #     # Ahora, 'posts' solo incluirá los posts que el usuario tiene permiso para ver
-    #     serializer = PostSerializer(posts, many=True)
-    #     return Response(serializer.data)
 
 # View for edit POST
 class PostEditView(generics.UpdateAPIView):
