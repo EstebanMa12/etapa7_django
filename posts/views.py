@@ -64,6 +64,9 @@ class PostEditView(generics.UpdateAPIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 class PostDetailView(generics.RetrieveAPIView):
+    """
+        Vista para ver un post
+    """
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     lookup_field = 'id'
@@ -74,31 +77,18 @@ class PostDetailView(generics.RetrieveAPIView):
         if not permissions.has_object_permission(self.request,self, obj):
             raise PermissionDenied("No tienes permiso para ver este post")
         return obj
-        
-#LIKES
 
-from posts.models import Like
-from django.db import IntegrityError
-
-class LikeCreateDeleteView(generics.GenericAPIView):
+# DELETE POST
+class PostDeleteView(generics.DestroyAPIView):
     """
-        Vista para crear y eliminar likes
+        Vista para eliminar un post
     """
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [UserHasEditPermission]
+    lookup_field = 'id'
+    
+    def perform_destroy(self, instance):
+        instance.delete()
 
-def add_like(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-    try:
-        Like.objects.create(user=request.user, post=post)
-        return Response({"message": "Like added successfully"}, status=status.HTTP_200_OK)  # return a 200 OK status
-    except IntegrityError:
-        return Response({"error": "Like already exists"}, status=status.HTTP_400_BAD_REQUEST)
-
-def remove_like(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-    try:
-        like = Like.objects.get(user=request.user, post=post)
-        like.delete()
-        return Response({"message": "Like removed successfully"}, status=status.HTTP_200_OK)  # return a 200 OK status
-    except Like.DoesNotExist:
-        return Response({"error": "Like not found"}, status=status.HTTP_404_NOT_FOUND)  # return a 404 Not Found status
 

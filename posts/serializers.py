@@ -1,5 +1,4 @@
 
-from posts.forms import PostForm
 from posts.models import Post
 from rest_framework import serializers
 

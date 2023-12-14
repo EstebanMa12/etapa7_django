@@ -28,26 +28,3 @@ class Post(DefaultModel, models.Model):
         return self.title
     class Meta:
         ordering = ['-created_at']
-        
-
-# a model for likes
-class Like(DefaultModel, models.Model):
-    # Like model
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    
-    class Meta:
-        unique_together = ('post', 'user')
-
-    def __str__(self):
-        return self.post.title + ' - ' + self.user.username
-    
-# a model for comments
-class Comment(DefaultModel, models.Model):
-    # Comment model
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    content = models.TextField()
-
-    def __str__(self):
-        return self.post.title + ' - ' + self.user.username + ' - ' + self.content[:20]

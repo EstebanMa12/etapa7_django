@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models import Post, Like, Comment
+from .models import Post
+from comments.models import Comment
+from likes.models import Like
 
 class LikeInline(admin.TabularInline):
     model = Like
