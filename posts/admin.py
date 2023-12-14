@@ -21,6 +21,7 @@ class PostAdmin(admin.ModelAdmin):
             'fields': ('title', 'content', 'author', 'edit_permission','read_permission')
         }),
     )
+    list_display_links = ('id', 'title')
     inlines = [LikeInline, CommentInline]
 
 

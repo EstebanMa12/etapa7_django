@@ -1,5 +1,6 @@
 
 # POSTS
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework import generics
 from rest_framework.response import Response
@@ -78,16 +79,22 @@ class PostDetailView(generics.RetrieveAPIView):
 
 from posts.models import Like
 from user.models import CustomUser
+from django.db import IntegrityError
 
 def add_like(request, post_id):
-    user = CustomUser.objects.get(id=request.user.id)
-    post = Post.objects.get(post_id)
-    like = Like(user=user, post=post)
-    like.save()
+    post = get_object_or_404(Post, id=post_id)
+    try:
+        Like.objects.create(user=request.user, post=post)
+        return Response({"message": "Like added successfully"}, status=status.HTTP_200_OK)  # return a 200 OK status
+    except IntegrityError:
+        return Response({"error": "Like already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
 def remove_like(request, post_id):
-    user = CustomUser.objects.get(id=request.user.id)
-    post = Post.objects.get(post_id)
-    like = Like.objects.get(user=user, post=post)
-    like.delete()
+    post = get_object_or_404(Post, id=post_id)
+    try:
+        like = Like.objects.get(user=request.user, post=post)
+        like.delete()
+        return Response({"message": "Like removed successfully"}, status=status.HTTP_200_OK)  # return a 200 OK status
+    except Like.DoesNotExist:
+        return Response({"error": "Like not found"}, status=status.HTTP_404_NOT_FOUND)  # return a 404 Not Found status
 
