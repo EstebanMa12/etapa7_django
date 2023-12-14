@@ -78,8 +78,12 @@ class PostDetailView(generics.RetrieveAPIView):
 #LIKES
 
 from posts.models import Like
-from user.models import CustomUser
 from django.db import IntegrityError
+
+class LikeCreateDeleteView(generics.GenericAPIView):
+    """
+        Vista para crear y eliminar likes
+    """
 
 def add_like(request, post_id):
     post = get_object_or_404(Post, id=post_id)

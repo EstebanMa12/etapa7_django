@@ -26,6 +26,9 @@ class Post(DefaultModel, models.Model):
     
     def __str__(self):
         return self.title
+    class Meta:
+        ordering = ['-created_at']
+        
 
 # a model for likes
 class Like(DefaultModel, models.Model):
