@@ -9,6 +9,8 @@ from posts.serializers import PostSerializer
 from django.core.exceptions import ValidationError
 from .permissions import UserHasEditPermission, UserHasReadPermission
 from rest_framework.pagination import PageNumberPagination
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.exceptions import PermissionDenied
 
 
 # View for create POST and List
@@ -21,10 +23,8 @@ class PostCreateView(generics.ListCreateAPIView):
         permissions = []
         if self.request.method == 'POST':
             permissions.append(IsAuthenticated)
-            # self.permission_classes = [IsAuthenticated,]
         else:
             permissions.append(UserHasReadPermission)
-            # self.permission_classes = [UserHasReadPermission,]
         return [p() for p in permissions]      
     
     def perform_create(self, serializer):
@@ -34,12 +34,19 @@ class PostCreateView(generics.ListCreateAPIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
     def get_queryset(self):
-        queryset = Post.objects.all()
-        # Filtrado
-        for post in list(queryset):
-            object_permissions  = UserHasReadPermission()
-            if not object_permissions.has_object_permission(self.request, self, post):
-                queryset = queryset.exclude(id=post.id)
+        try:    
+            queryset = Post.objects.all()
+            # Filtrado
+            for post in list(queryset):
+                object_permissions  = UserHasReadPermission()
+                if not object_permissions.has_object_permission(self.request, self, post):
+                    queryset = queryset.exclude(id=post.id)
+        except ObjectDoesNotExist:
+            queryset = Post.objects.none()
+        except Exception as e:
+            print(f"Error al obtener los posts: {e}")
+            queryset = Post.objects.none()
+            
         return queryset
 
 # View for edit POST
@@ -54,4 +61,17 @@ class PostEditView(generics.UpdateAPIView):
             serializer.save(author=self.request.user)
         except ValidationError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class PostDetailView(generics.RetrieveAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    lookup_field = 'id'
+    
+    def get_object(self):
+        obj = super().get_object()
+        permissions  = UserHasReadPermission()
+        if not permissions.has_object_permission(self.request,self, obj):
+            raise PermissionDenied("No tienes permiso para ver este post")
+        return obj
+        
 
