@@ -1,9 +1,15 @@
 from django.contrib import admin
 
-from .models import Post
+from .models import Post, Like, Comment
 
+class LikeInline(admin.TabularInline):
+    model = Like
+    extra = 1
+
+class CommentInline(admin.TabularInline):
+    model = Comment
+    extra = 1
 #Models for posts
-@admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     list_display = ('id','title', 'author', 'edit_permission','read_permission', 'is_deleted')
     list_filter = ('id','author', 'is_deleted')
@@ -15,3 +21,9 @@ class PostAdmin(admin.ModelAdmin):
             'fields': ('title', 'content', 'author', 'edit_permission','read_permission')
         }),
     )
+    inlines = [LikeInline, CommentInline]
+
+
+admin.site.register(Post, PostAdmin)
+admin.site.register(Like)
+admin.site.register(Comment)    
