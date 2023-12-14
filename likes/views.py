@@ -64,8 +64,8 @@ class LikeFilter(django_filters.FilterSet):
     """
         Filtro para los likes
     """
-    user_id = django_filters.NumberFilter(field_name='id', lookup_expr='exact')
-    post_id = django_filters.NumberFilter(field_name='id', lookup_expr='exact')
+    user_id = django_filters.NumberFilter(field_name='user__id', lookup_expr='exact')
+    post_id = django_filters.NumberFilter(field_name='post__id', lookup_expr='exact')
     class Meta:
         model = Like
         fields = ['user_id', 'post_id']
@@ -86,20 +86,20 @@ class LikeListView(generics.ListAPIView):
     
     def get_queryset(self):
         queryset = Like.objects.filter(post__user=self.request.user)  # Solo los likes de los posts del usuario autenticado
-        user_id = self.request.query_params.get('user_id')
-        print(user_id)
-        post_id = self.request.query_params.get('post_id')
-        if user_id is not None:
-            try:
-                user_id = int(user_id)
-                queryset = queryset.filter(user__id=user_id)
-            except (ValueError, TypeError):
-                return Like.objects.none()
+        # user_id = self.request.query_params.get('user_id')
+        # print(user_id)
+        # post_id = self.request.query_params.get('post_id')
+        # if user_id is not None:
+        #     try:
+        #         user_id = int(user_id)
+        #         queryset = queryset.filter(user__id=user_id)
+        #     except (ValueError, TypeError):
+        #         return Like.objects.none()
             
-        if post_id is not None:
-            try:
-                post_id = int(post_id)
-                queryset = queryset.filter(post__id=post_id)
-            except (ValueError, TypeError):
-                return Like.objects.none()
+        # if post_id is not None:
+        #     try:
+        #         post_id = int(post_id)
+        #         queryset = queryset.filter(post__id=post_id)
+        #     except (ValueError, TypeError):
+        #         return Like.objects.none()
         return queryset
