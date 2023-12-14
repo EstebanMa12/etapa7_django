@@ -74,4 +74,20 @@ class PostDetailView(generics.RetrieveAPIView):
             raise PermissionDenied("No tienes permiso para ver este post")
         return obj
         
+#LIKES
+
+from posts.models import Like
+from user.models import CustomUser
+
+def add_like(request, post_id):
+    user = CustomUser.objects.get(id=request.user.id)
+    post = Post.objects.get(post_id)
+    like = Like(user=user, post=post)
+    like.save()
+
+def remove_like(request, post_id):
+    user = CustomUser.objects.get(id=request.user.id)
+    post = Post.objects.get(post_id)
+    like = Like.objects.get(user=user, post=post)
+    like.delete()
 
