@@ -59,16 +59,16 @@ class LikeCreateView(generics.GenericAPIView):
 
 # FILTERS OF LIKES 
 
-
-
-# class LikeFilter(django_filters.FilterSet):
-#     """
-#         Filtro para los likes
-#     """
-#     class Meta:
-#         model = Like
-#         fields = ['user_id', 'post_id']
-
+import django_filters
+class LikeFilter(django_filters.FilterSet):
+    """
+        Filtro para los likes
+    """
+    user_id = django_filters.NumberFilter(field_name='id', lookup_expr='exact')
+    post_id = django_filters.NumberFilter(field_name='id', lookup_expr='exact')
+    class Meta:
+        model = Like
+        fields = ['user_id', 'post_id']
 
         
 # LIST OF LIKES
@@ -82,17 +82,24 @@ class LikeListView(generics.ListAPIView):
         UserHasReadPermission
     ]    
     pagination_class = PageNumberPagination
+    filter_class = LikeFilter 
     
     def get_queryset(self):
-        queryset = Like.objects.all()
-
-        user_id = self.request.query_params.get('user_id', None)
-        post_id = self.request.query_params.get('post_id', None)
-
+        queryset = Like.objects.filter(post__user=self.request.user)  # Solo los likes de los posts del usuario autenticado
+        user_id = self.request.query_params.get('user_id')
+        print(user_id)
+        post_id = self.request.query_params.get('post_id')
         if user_id is not None:
-            queryset = queryset.filter(user__id=user_id)
-
+            try:
+                user_id = int(user_id)
+                queryset = queryset.filter(user__id=user_id)
+            except (ValueError, TypeError):
+                return Like.objects.none()
+            
         if post_id is not None:
-            queryset = queryset.filter(post__id=post_id)
-
+            try:
+                post_id = int(post_id)
+                queryset = queryset.filter(post__id=post_id)
+            except (ValueError, TypeError):
+                return Like.objects.none()
         return queryset
