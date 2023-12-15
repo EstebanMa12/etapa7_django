@@ -30,7 +30,7 @@ class CustomUserAdmin(UserAdmin):
     list_display = ('id','username', 'team', 'is_superuser', 'is_admin')
     list_filter = ('username', 'team', 'is_superuser', 'is_active')
     list_display_links = ('id', 'username')
-    search_fields = ('username', 'team')
+    search_fields = ('username', 'team__team_name')
     list_per_page = 10
     
     fieldsets = (
