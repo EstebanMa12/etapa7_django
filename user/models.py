@@ -50,7 +50,7 @@ class CustomUser(AbstractUser):
     # Use email as the username field
     username = models.EmailField(unique=True)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    is_admin = models.BooleanField(default = False)
+    is_admin = models.BooleanField(default = False, blank = True, null=True)
     is_staff = models.BooleanField(default=True)
 
     USERNAME_FIELD = 'username'
