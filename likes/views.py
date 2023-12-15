@@ -11,7 +11,7 @@ from likes.serializers import LikeSerializer
 from posts.permissions import UserHasReadPermission
 from django.db import IntegrityError
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Q
+from django.db.models import Q, Subquery
 
 
 # Create your views here.
@@ -89,13 +89,13 @@ class LikeListView(generics.ListAPIView):
     filter_class = LikeFilter 
     
     def get_queryset(self):
-        allowed_post_ids = Post.objects.filter(
+        allowed_posts = Post.objects.filter(
             Q(read_permission = 'public') |
             Q(read_permission = 'authenticated')|
             Q(author=self.request.user)|
             Q(author__team = self.request.user.team)
-        ).values_list('id', flat=True)
+        )
         
-        queryset = Like.objects.filter(post_id__in=allowed_post_ids)
+        queryset = Like.objects.filter(post_id__in=Subquery(allowed_posts.values('id')))
 
         return queryset
