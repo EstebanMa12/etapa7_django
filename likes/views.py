@@ -12,6 +12,7 @@ from posts.permissions import UserHasReadPermission
 from django.db import IntegrityError
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q, Subquery
+from django.core.exceptions import ObjectDoesNotExist
 
 
 # Create your views here.
@@ -77,25 +78,26 @@ class LikeListView(generics.ListAPIView):
     """
         Vista para ver los likes de los post a los cuales tengo permiso
     """
-    # Lo primero que debo hacer es filtrar todos los post a los que el usuario que hace el request tiene permitido leer, de esta manera puedo obtener los likes de cada uno de ellos 
-    # Cuando utilizo la busqueda por user_id, voy a buscar los post del user_id a los cuales yo tengo permiso para leer
-    
     serializer_class = LikeSerializer
-    permission_classes = [
-        IsAuthenticated,
-        UserHasReadPermission
-    ]    
+    permission_classes = [IsAuthenticated, UserHasReadPermission]
     pagination_class = PageNumberPagination
     filter_class = LikeFilter 
     
     def get_queryset(self):
-        allowed_posts = Post.objects.filter(
-            Q(read_permission = 'public') |
-            Q(read_permission = 'authenticated')|
-            Q(author=self.request.user)|
-            Q(author__team = self.request.user.team)
-        )
-        
-        queryset = Like.objects.filter(post_id__in=Subquery(allowed_posts.values('id')))
-
-        return queryset
+        try:
+            allowed_posts = Post.objects.filter(
+                Q(read_permission='public') |
+                Q(read_permission='authenticated') |
+                Q(author=self.request.user) |
+                Q(author__team=self.request.user.team)
+            )
+            
+            queryset = Like.objects.filter(post_id__in=Subquery(allowed_posts.values('id')))
+            
+            return queryset
+        except ObjectDoesNotExist as e:
+            # Manejo de la excepción cuando no se encuentran posts permitidos
+            return Response({"detail": "No se encontraron posts permitidos"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # Manejo de otras excepciones
+            return Response({"detail": "Ocurrió un error al procesar la solicitud"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
