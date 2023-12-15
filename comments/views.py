@@ -8,7 +8,9 @@ from django.shortcuts import get_object_or_404
 from posts.models import Post
 from rest_framework.response import Response
 from django.db import IntegrityError
-
+import django_filters
+from django.db.models import Q, Subquery
+from django.core.exceptions import ObjectDoesNotExist
 
 
 # Create your views here.
@@ -56,3 +58,44 @@ class CommentCreateView(generics.GenericAPIView):
             return Response({"message": "Comment deleted successfully"}, status=status.HTTP_200_OK)  # return a 200 OK status
         else:
             return Response({"error": "Comment does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CommentFilter(django_filters.FilterSet):
+    """
+        Filtro para los comentarios
+    """
+    post = django_filters.NumberFilter(field_name='post', lookup_expr='exact')
+    user = django_filters.NumberFilter(field_name='user', lookup_expr='exact')
+    
+    class Meta:
+        model = Comment
+        fields = ['post', 'user']
+        
+class CommentListView(generics.ListAPIView):
+    """
+        Vista para listar los comentarios
+    """
+    serializer_class = CommentSerializer
+    filterset_class = CommentFilter
+    permission_classes = [
+        IsAuthenticated,
+        UserHasReadPermission
+    ]
+    
+    def get_queryset(self):
+        try:
+            # Obtener posts permitidos
+            allowed_posts = Post.objects.filter(
+                    Q(read_permission='public') |
+                    Q(read_permission='authenticated') |
+                    Q(author=self.request.user) |
+                    Q(author__team=self.request.user.team)
+                )
+            queryset = Comment.objects.filter(post_id__in=Subquery(allowed_posts.values('id')))
+            return queryset
+        except ObjectDoesNotExist as e:
+            # Manejo de la excepción cuando no se encuentran posts permitidos
+            return Response({"detail": "No se encontraron posts permitidos"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # Manejo de otras excepciones
+            return Response({"detail": "Ocurrió un error al procesar la solicitud"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
