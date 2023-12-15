@@ -90,7 +90,7 @@ class LikeListView(generics.ListAPIView):
                 Q(author__team=self.request.user.team)
             )
             
-            queryset = Like.objects.filter(post_id__in=Subquery(allowed_posts.values('id')))
+            queryset = Like.iltezr(post_id__in=Subquery(allowed_posts.values('id')))
             
             return queryset
         except ObjectDoesNotExist as e:

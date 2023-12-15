@@ -1,5 +1,6 @@
 
 # POSTS
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework import generics
@@ -54,7 +55,7 @@ class PostCreateView(generics.ListCreateAPIView):
 class PostEditView(generics.UpdateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [UserHasEditPermission]
+    permission_classes = [IsAuthenticated,UserHasEditPermission]
     lookup_field = 'id'
     
     def perform_update(self, serializer):
@@ -70,6 +71,7 @@ class PostDetailView(generics.RetrieveAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     lookup_field = 'id'
+    permission_classes = [IsAuthenticated]
     
     def get_object(self):
         obj = super().get_object()
@@ -85,10 +87,18 @@ class PostDeleteView(generics.DestroyAPIView):
     """
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [UserHasEditPermission]
-    lookup_field = 'id'
+    permission_classes = [
+        IsAuthenticated,
+        UserHasEditPermission
+        ]
     
-    def perform_destroy(self, instance):
-        instance.delete()
+    def destroy(self, request, *args, **kwargs):
+        try:
+            post = self.get_object()
+            self.check_object_permissions(request, post)
+            post.delete()
+            return Response({"message": "Post deleted successfully"}, status=status.HTTP_200_OK)
+        except Http404:
+            return Response({"error": "Post doesn't exist"}, status=status.HTTP_400_BAD_REQUEST)
 
 
