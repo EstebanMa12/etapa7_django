@@ -11,6 +11,7 @@ from likes.serializers import LikeSerializer
 from posts.permissions import UserHasReadPermission
 from django.db import IntegrityError
 from rest_framework.pagination import PageNumberPagination
+from django.db.models import Q
 
 
 # Create your views here.
@@ -74,8 +75,11 @@ class LikeFilter(django_filters.FilterSet):
 # LIST OF LIKES
 class LikeListView(generics.ListAPIView):
     """
-        Vista para ver los likes a los cuales tengo permiso
+        Vista para ver los likes de los post a los cuales tengo permiso
     """
+    # Lo primero que debo hacer es filtrar todos los post a los que el usuario que hace el request tiene permitido leer, de esta manera puedo obtener los likes de cada uno de ellos 
+    # Cuando utilizo la busqueda por user_id, voy a buscar los post del user_id a los cuales yo tengo permiso para leer
+    
     serializer_class = LikeSerializer
     permission_classes = [
         IsAuthenticated,
@@ -85,21 +89,13 @@ class LikeListView(generics.ListAPIView):
     filter_class = LikeFilter 
     
     def get_queryset(self):
-        queryset = Like.objects.filter(post__user=self.request.user)  # Solo los likes de los posts del usuario autenticado
-        # user_id = self.request.query_params.get('user_id')
-        # print(user_id)
-        # post_id = self.request.query_params.get('post_id')
-        # if user_id is not None:
-        #     try:
-        #         user_id = int(user_id)
-        #         queryset = queryset.filter(user__id=user_id)
-        #     except (ValueError, TypeError):
-        #         return Like.objects.none()
-            
-        # if post_id is not None:
-        #     try:
-        #         post_id = int(post_id)
-        #         queryset = queryset.filter(post__id=post_id)
-        #     except (ValueError, TypeError):
-        #         return Like.objects.none()
+        allowed_post_ids = Post.objects.filter(
+            Q(read_permission = 'public') |
+            Q(read_permission = 'authenticated')|
+            Q(author=self.request.user)|
+            Q(author__team = self.request.user.team)
+        ).values_list('id', flat=True)
+        
+        queryset = Like.objects.filter(post_id__in=allowed_post_ids)
+
         return queryset
