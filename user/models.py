@@ -5,7 +5,6 @@ from django.db import models
 class DefaultModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    is_deleted = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
@@ -17,14 +16,39 @@ class Team(DefaultModel, models.Model):
     def __str__(self):
         return self.team_name
 
+# Only the super admin can create admins and does not have the field user ?
+from django.contrib.auth.models import BaseUserManager
+    
+class CustomUserManager(BaseUserManager):
+    # Custom user manager
+    def create_user(self, username, password=None, team=None):
+        if not username:
+            raise ValueError('Users must have a username')
+        if not team:
+            raise ValueError('Normal users must have a team')
+        user = self.model(username=username, team=team)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+    
+    def create_superuser(self, username, password, team=None):
+        # Cuando se crea un superusuario, el equipo puede ser None
+        user = self.create_user(username=username, password=password, team=team)
+        user.is_admin = True
+        user.is_superuser = True
+        user.save(using=self._db)
+        return user
+
 class CustomUser(AbstractUser):
     # Use email as the username field
     username = models.EmailField(unique=True)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, blank=True, null=True)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    is_admin = models.BooleanField(default = False)
 
     USERNAME_FIELD = 'username'
+    objects = CustomUserManager()
+    
 
     def __str__(self):
         return self.username
     
-

@@ -55,8 +55,6 @@ class LikeCreateView(generics.GenericAPIView):
             return Response({"error": "Like does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 # FILTERS OF LIKES 
 
 import django_filters
