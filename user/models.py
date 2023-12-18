@@ -9,16 +9,10 @@ class DefaultModel(models.Model):
     class Meta:
         abstract = True
         
-class Team(DefaultModel, models.Model):
-    # Teams model
-    team_name = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.team_name
 
 # Only the super admin can create admins and does not have the field user ?
 from django.contrib.auth.models import BaseUserManager
-from django.core.validators import validate_email
+from django.core.validators import validate_email, validate_slug
 from django.core.exceptions import ValidationError
     
 class CustomUserManager(BaseUserManager):
@@ -31,25 +25,28 @@ class CustomUserManager(BaseUserManager):
         
         if not username:
             raise ValueError('Users must have a username')
+        
         if not team:
-            raise ValueError('Normal users must have a team')
-        user = self.model(username=username, team=team)
+            raise ValueError('Users must have a team')
+        user = self.model(username=username)
         user.set_password(password)
         user.save(using=self._db)
         return user
     
-    def create_superuser(self, username, password, team=None):
-        # Cuando se crea un superusuario, el equipo puede ser None
-        user = self.create_user(username=username, password=password, team=team)
+    def create_superuser(self, username, password, team = "SuperUser"):
+        # Cuando se crea un superusuario, el equipo puede es "SuperUser"
+        if not team:
+            team = "SuperUser"
+        user = self.create_user(username=username, password=password, team= team)
         user.is_admin = True
         user.is_superuser = True
         user.save(using=self._db)
         return user
 
-class CustomUser(AbstractUser):
+class CustomUser(DefaultModel, AbstractUser):
     # Use email as the username field
     username = models.EmailField(unique=True)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, blank = True, null=True)
+    team = models.CharField(max_length=255, blank = False, null= False, validators = [validate_slug])
     is_admin = models.BooleanField(default = False)
     is_staff = models.BooleanField(default=True)
 
@@ -59,4 +56,7 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+    
+    class Meta:
+        ordering = ("-created_at",)
     

@@ -2,23 +2,6 @@
 from django.contrib import admin
 
 
-#Models for teams
-from .models import Team
-@admin.register(Team)
-class TeamAdmin(admin.ModelAdmin):
-    list_display = ('team_name',)
-    list_filter = ('team_name',)
-    search_fields = ('team_name',)
-    ordering = ('team_name',)
-    list_per_page = 10
-    fieldsets = (
-        (None, {
-            'fields': ('team_name',)
-        }),
-    )
-    
-    
-
 #Models for users
 from .models import CustomUser
 from django.contrib.auth.admin import UserAdmin

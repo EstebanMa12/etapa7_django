@@ -24,3 +24,6 @@ def logout_view(request):
     # Redirect to a login page, home page, or any other page
     return redirect('login')
 
+#Logout view, log out and redirect to the home
+
+
