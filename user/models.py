@@ -14,6 +14,7 @@ class DefaultModel(models.Model):
 from django.contrib.auth.models import BaseUserManager
 from django.core.validators import validate_email, validate_slug
 from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
     
 class CustomUserManager(BaseUserManager):
     # Custom user manager
@@ -27,6 +28,12 @@ class CustomUserManager(BaseUserManager):
             validate_email(username)
         except ValidationError:
             raise ValueError('Invalid email address')
+        
+        try:
+            validate_password(password)
+        except ValidationError:
+            raise ValueError('Invalid password')
+            
         
         if not username:
             raise ValueError('Users must have a username')
@@ -45,12 +52,23 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
     
-    def create_superuser(self, username, password, team=None, is_admin=True, is_superuser=True, **extra_fields):
-    # Asigna el valor predeterminado si no se proporciona un equipo
+    def create_superuser(self,
+                        username,
+                        password,
+                        team=None,
+                        is_admin=True,
+                        is_superuser=True,
+                        **extra_fields):
+# Asigna el valor predeterminado si no se proporciona un equipo
         if team is None:
             team = "SuperUser"
 
-        return self.create_user(username=username, password=password, team=team, is_admin=is_admin, is_superuser=is_superuser, **extra_fields)
+        return self.create_user(username=username,
+                                password=password,
+                                team=team,
+                                is_admin=True,
+                                is_superuser=True,
+                                **extra_fields)
 
 class CustomUser(PermissionsMixin, AbstractBaseUser, DefaultModel):
     # Use email as the username field
@@ -58,10 +76,10 @@ class CustomUser(PermissionsMixin, AbstractBaseUser, DefaultModel):
     team = models.CharField(max_length=255, blank = False, null= False, validators = [validate_slug])
     is_admin = models.BooleanField(default = False)
     is_superuser = models.BooleanField(default = False)
-    # is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=True)
     
     USERNAME_FIELD = 'username'
+    
     objects = CustomUserManager()
     
 
