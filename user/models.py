@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 
 # A default model with the created_at, modified_at, is_deleted field
@@ -17,7 +17,12 @@ from django.core.exceptions import ValidationError
     
 class CustomUserManager(BaseUserManager):
     # Custom user manager
-    def create_user(self, username, password=None, team=None):
+    def create_user(self, username,
+                    password=None,
+                    team=None,
+                    is_admin=False,
+                    is_superuser=False,
+                    **extra_fields):
         try:
             validate_email(username)
         except ValidationError:
@@ -28,28 +33,34 @@ class CustomUserManager(BaseUserManager):
         
         if not team:
             raise ValueError('Users must have a team')
-        user = self.model(username=username)
+        username = self.normalize_email(username)
+        
+        user = self.model(username=username,
+                        team=team,
+                        is_admin = is_admin,
+                        is_superuser = is_superuser,
+                        **extra_fields,
+                        )
         user.set_password(password)
         user.save(using=self._db)
         return user
     
-    def create_superuser(self, username, password, team = "SuperUser"):
-        # Cuando se crea un superusuario, el equipo puede es "SuperUser"
-        if not team:
+    def create_superuser(self, username, password, team=None, is_admin=True, is_superuser=True, **extra_fields):
+    # Asigna el valor predeterminado si no se proporciona un equipo
+        if team is None:
             team = "SuperUser"
-        user = self.create_user(username=username, password=password, team= team)
-        user.is_admin = True
-        user.is_superuser = True
-        user.save(using=self._db)
-        return user
 
-class CustomUser(DefaultModel, AbstractUser):
+        return self.create_user(username=username, password=password, team=team, is_admin=is_admin, is_superuser=is_superuser, **extra_fields)
+
+class CustomUser(PermissionsMixin, AbstractBaseUser, DefaultModel):
     # Use email as the username field
     username = models.EmailField(unique=True)
     team = models.CharField(max_length=255, blank = False, null= False, validators = [validate_slug])
     is_admin = models.BooleanField(default = False)
+    is_superuser = models.BooleanField(default = False)
+    # is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=True)
-
+    
     USERNAME_FIELD = 'username'
     objects = CustomUserManager()
     
