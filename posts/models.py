@@ -19,7 +19,7 @@ class Post(DefaultModel, models.Model):
     )
     
     title = models.CharField(max_length=100)
-    content = models.TextField()
+    content = models.TextField(max_length=1000)
     author = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     read_permission = models.CharField(max_length=20, choices=PERMISSIONS, default=PUBLIC)
     edit_permission = models.CharField(max_length=20, choices=PERMISSIONS, default=PUBLIC)

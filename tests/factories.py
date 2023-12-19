@@ -18,11 +18,11 @@ class PostFactory(DjangoModelFactory):
     class Meta:
         model = Post
         
-    title = factory.Sequence(lambda n: 'title{}'.format(n))
-    content = factory.Sequence(lambda n: 'content{}'.format(n))
+    title = factory.Faker('text', max_nb_chars=50)  # Update the max_nb_chars value to a shorter length
+    content = factory.Faker('text', max_nb_chars=1000)  # Update the max_nb_chars value to a shorter length
     author = factory.SubFactory(UserFactory)
-    read_permission = 'public'
-    edit_permission = 'public'
+    read_permission = factory.Faker('random_element', elements=['public', 'authenticated', 'team', 'author'])
+    edit_permission = factory.Faker('random_element', elements=['public', 'authenticated', 'team', 'author'])
     
 class LikesFactory(DjangoModelFactory):
     class Meta:
