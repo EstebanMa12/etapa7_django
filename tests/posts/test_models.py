@@ -1,5 +1,5 @@
 from django.test import TestCase
-from .models import Post
+from ...posts.models import Post
 
 class PostModelTest(TestCase):
     @classmethod
