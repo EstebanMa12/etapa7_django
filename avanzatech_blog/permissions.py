@@ -1,5 +1,5 @@
-from rest_framework.permissions import IsAuthenticated, BasePermission
-from .models import Post
+from rest_framework.permissions import IsAuthenticated, BasePermission, IsAdminUser
+from ..posts.models import Post
 class UserHasEditPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         # Comprueba cuales son los permisos de edicion del post
@@ -31,3 +31,7 @@ class UserHasReadPermission(BasePermission):
             return request.user == obj.author
         else:
             return False
+        
+class IsCustomAdminUser(BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user.is_authenticated and request.user.is_admin)

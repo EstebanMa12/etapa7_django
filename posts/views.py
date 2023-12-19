@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from posts.models import Post
 from posts.serializers import PostSerializer
 from django.core.exceptions import ValidationError
-from .permissions import UserHasEditPermission, UserHasReadPermission
+from ..avanzatech_blog.permissions import UserHasEditPermission, UserHasReadPermission, IsCustomAdminUser
 from rest_framework.pagination import PageNumberPagination
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import PermissionDenied
@@ -22,12 +22,10 @@ class PostCreateView(generics.ListCreateAPIView):
     pagination_class = PageNumberPagination
     
     def get_permissions(self):
-        permissions = []
         if self.request.method == 'POST':
-            permissions.append(IsAuthenticated)
+            return [IsAuthenticated()]
         else:
-            permissions.append(UserHasReadPermission)
-        return [p() for p in permissions]      
+            return [UserHasReadPermission()]  
     
     def perform_create(self, serializer):
         try:

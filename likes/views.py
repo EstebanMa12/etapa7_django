@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from likes.models import Like
 from posts.models import Post
 from likes.serializers import LikeSerializer
-from posts.permissions import UserHasReadPermission
+from avanzatech_blog.permissions import UserHasReadPermission, IsCustomAdminUser
 from django.db import IntegrityError
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q, Subquery
@@ -21,6 +21,7 @@ class LikeCreateView(generics.GenericAPIView):
     serializer_class = LikeSerializer
     permission_classes = [
         IsAuthenticated,
+        IsCustomAdminUser,
         UserHasReadPermission
     ]
     
@@ -75,7 +76,9 @@ class LikeListView(generics.ListAPIView):
         Vista para ver los likes de los post a los cuales tengo permiso
     """
     serializer_class = LikeSerializer
-    permission_classes = [IsAuthenticated, UserHasReadPermission]
+    permission_classes = [IsAuthenticated,
+                            IsCustomAdminUser,
+                            UserHasReadPermission]
     pagination_class = PageNumberPagination
     filter_class = LikeFilter 
     

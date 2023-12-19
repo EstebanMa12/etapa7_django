@@ -3,7 +3,7 @@ from comments.serializers import CommentSerializer
 from .models import Comment
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
-from posts.permissions import UserHasReadPermission
+from avanzatech_blog.permissions import UserHasReadPermission, IsCustomAdminUser
 from django.shortcuts import get_object_or_404
 from posts.models import Post
 from rest_framework.response import Response
@@ -21,6 +21,7 @@ class CommentCreateView(generics.GenericAPIView):
     serializer_class = CommentSerializer
     permission_classes = [
         IsAuthenticated,
+        IsCustomAdminUser,
         UserHasReadPermission
     ]
     
@@ -79,6 +80,7 @@ class CommentListView(generics.ListAPIView):
     filterset_class = CommentFilter
     permission_classes = [
         IsAuthenticated,
+        IsCustomAdminUser,
         UserHasReadPermission
     ]
     
