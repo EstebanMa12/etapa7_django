@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from posts.models import Post
 from posts.serializers import PostSerializer
 from django.core.exceptions import ValidationError
-from ..avanzatech_blog.permissions import UserHasEditPermission, UserHasReadPermission, IsCustomAdminUser
+from avanzatech_blog.permissions import UserHasEditPermission, UserHasReadPermission, IsCustomAdminUser
 from rest_framework.pagination import PageNumberPagination
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import PermissionDenied
