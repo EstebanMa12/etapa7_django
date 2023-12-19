@@ -15,3 +15,10 @@ class Like(DefaultModel, models.Model):
 
     def __str__(self):
         return self.post.title + ' - ' + self.user.username
+    
+    def clean(self):
+        if self.post is None:
+            raise ValueError('Likes must have a post')
+        if self.user is None:
+            raise ValueError('Likes must have a user')
+    

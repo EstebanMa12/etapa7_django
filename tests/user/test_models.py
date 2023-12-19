@@ -1,7 +1,5 @@
 import pytest
-from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
-from user.models import CustomUserManager
 from django.db.utils import IntegrityError
 
 pytestmark = pytest.mark.django_db
@@ -26,7 +24,7 @@ class TestUserModel:
         
     @pytest.mark.django_db
     def test_validate_unique_username(self, user_factory):
-        username = "test@example.com"
+        username = "test2@example.com"
         password = "StrongPassword123!"
         team = "Test Team"
         is_admin = False
@@ -70,7 +68,7 @@ class TestUserModel:
     
     @pytest.mark.django_db
     def test_create_user_invalid_password(self, user_factory):
-        username = "test@example.com"
+        username = "test3@example.com"
         password = "weak"
         team = "Test Team"
         is_admin = False
@@ -103,18 +101,20 @@ class TestUserModel:
     
     @pytest.mark.django_db
     def test_create_user_missing_team(self, user_factory):
-        username = "test@example.com"
+        username = "test4@example.com"
         password = "StrongPassword123!"
         team = ""
         is_admin = False
         is_superuser = False
-        # This should not raise an exception because the field is nullable
-        user = user_factory(username=username,
-                            password=password,
-                            team=team,
-                            is_admin=is_admin,
-                            is_superuser=is_superuser)
-    
+        try:
+            user_factory(username=username,
+                                password=password,
+                                team=team,
+                                is_admin=is_admin,
+                                is_superuser=is_superuser)
+        except ValueError as e:
+            assert str(e) == 'Users must have a team'
+        
     @pytest.mark.django_db
     def test_create_superuser(self, user_factory):
         username = "admin@example.com"

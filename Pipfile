@@ -10,6 +10,7 @@ django-filter = "*"
 factory-boy = "*"
 pytest-cov = "*"
 pytest-factoryboy = "*"
+pytest-django = "*"
 
 [dev-packages]
 

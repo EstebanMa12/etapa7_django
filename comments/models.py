@@ -1,6 +1,6 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from posts.models import Post
-
 from user.models import CustomUser, DefaultModel
 
 # Create your models here.
@@ -13,3 +13,11 @@ class Comment(DefaultModel, models.Model):
 
     def __str__(self):
         return self.post.title + ' - ' + self.user.username + ' - ' + self.content[:20]
+
+    def clean(self):
+        if not self.post:
+            raise ValidationError("Post does not exist.")
+        if not self.user:
+            raise ValidationError("User does not exist.")
+        if not self.content:
+            raise ValidationError("Content cannot be empty.")
