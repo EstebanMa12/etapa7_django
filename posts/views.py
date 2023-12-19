@@ -68,7 +68,7 @@ class PostCreateView(generics.ListCreateAPIView):
 class PostEditView(generics.UpdateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated,UserHasEditPermission]
+    permission_classes = [UserHasEditPermission]
     lookup_field = 'id'
     
     def perform_update(self, serializer):
@@ -77,20 +77,28 @@ class PostEditView(generics.UpdateAPIView):
         except ValidationError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
+        
 class PostDetailView(generics.RetrieveAPIView):
     """
-        Vista para ver un post
+        Vista para ver un solo post
     """
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     lookup_field = 'id'
-    permission_classes = [IsAuthenticated]
+    permission_classes = [UserHasReadPermission]
     
     def get_object(self):
+        # post_id = self.kwargs['id']
+        # return get_object_or_404(Post, id=post_id)
+        
         obj = super().get_object()
-        permissions  = UserHasReadPermission()
-        if not permissions.has_object_permission(self.request,self, obj):
+
+        # Verificar los permisos personalizados
+        permissions = UserHasReadPermission()
+
+        if not permissions.has_object_permission(self.request, self, obj):
             raise PermissionDenied("No tienes permiso para ver este post")
+
         return obj
 
 # DELETE POST
