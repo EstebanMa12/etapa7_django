@@ -3,7 +3,7 @@ from comments.serializers import CommentSerializer
 from .models import Comment
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
-from avanzatech_blog.permissions import UserHasReadPermission, IsCustomAdminUser
+from avanzatech_blog.permissions import UserHasReadPermission
 from django.shortcuts import get_object_or_404
 from posts.models import Post
 from rest_framework.response import Response
@@ -11,6 +11,7 @@ from django.db import IntegrityError
 import django_filters
 from django.db.models import Q, Subquery
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.pagination import PageNumberPagination
 
 
 # Create your views here.
@@ -21,7 +22,6 @@ class CommentCreateView(generics.GenericAPIView):
     serializer_class = CommentSerializer
     permission_classes = [
         IsAuthenticated,
-        IsCustomAdminUser,
         UserHasReadPermission
     ]
     
@@ -78,26 +78,28 @@ class CommentListView(generics.ListAPIView):
     """
     serializer_class = CommentSerializer
     filterset_class = CommentFilter
-    permission_classes = [
-        IsAuthenticated,
-        IsCustomAdminUser,
-        UserHasReadPermission
-    ]
+    pagination_class = PageNumberPagination
     
     def get_queryset(self):
+        user = self.request.user
         try:
-            # Obtener posts permitidos
-            allowed_posts = Post.objects.filter(
+            if user.is_authenticated and user.is_admin:
+                queryset = CommentFilter(self.request.query_params, queryset=Comment.objects.all()).qs
+            elif not user.is_authenticated:
+                allowed_posts = Post.objects.filter(read_permission='public')
+                queryset = CommentFilter(self.request.query_params, queryset=Comment.objects.filter(post_id__in=allowed_posts)).qs
+            else:
+                allowed_posts = Post.objects.filter(
                     Q(read_permission='public') |
                     Q(read_permission='authenticated') |
                     Q(author=self.request.user) |
                     Q(author__team=self.request.user.team)
                 )
-            queryset = Comment.objects.filter(post_id__in=Subquery(allowed_posts.values('id')))
-            return queryset
-        except ObjectDoesNotExist as e:
-            # Manejo de la excepción cuando no se encuentran posts permitidos
+                queryset = CommentFilter(self.request.query_params, queryset=Comment.objects.filter(post_id__in=allowed_posts)).qs
+        except ObjectDoesNotExist:
             return Response({"detail": "No se encontraron posts permitidos"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            # Manejo de otras excepciones
+            # Handle any other exceptions
             return Response({"detail": "Ocurrió un error al procesar la solicitud"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return queryset

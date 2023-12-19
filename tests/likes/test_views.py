@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from tests.factories import LikeFactory, PostFactory, UserFactory
+from tests.factories import LikesFactory, PostFactory, UserFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -14,7 +14,7 @@ class TestLikeListView:
         client.force_authenticate(user=admin_user)
 
         # Crear algunos likes para probar
-        LikeFactory.create_batch(3)
+        LikesFactory.create_batch(3)
 
         url = reverse('like-list')
         response = client.get(url)
@@ -29,8 +29,8 @@ class TestLikeListView:
 
         # Crear algunos likes para probar
         allowed_posts = PostFactory.create_batch(2, read_permission='public')
-        LikeFactory.create_batch(3, post=allowed_posts[0])
-        LikeFactory.create_batch(2, post=allowed_posts[1])
+        LikesFactory.create_batch(3, post=allowed_posts[0])
+        LikesFactory.create_batch(2, post=allowed_posts[1])
 
         url = reverse('like-list')
         response = client.get(url)
@@ -43,8 +43,8 @@ class TestLikeListView:
 
         # Crear algunos likes para probar
         allowed_posts = PostFactory.create_batch(2, read_permission='public')
-        LikeFactory.create_batch(3, post=allowed_posts[0])
-        LikeFactory.create_batch(2, post=allowed_posts[1])
+        LikesFactory.create_batch(3, post=allowed_posts[0])
+        LikesFactory.create_batch(2, post=allowed_posts[1])
 
         url = reverse('like-list')
         response = client.get(url)
