@@ -4,6 +4,7 @@ from likes.models import Like
 from user.models import CustomUser
 from posts.models import Post
 from comments.models import Comment
+from django.core.exceptions import ValidationError
 
 class UserFactory(DjangoModelFactory):
     class Meta:
@@ -28,6 +29,11 @@ class PostFactory(DjangoModelFactory):
     author = factory.SubFactory(UserFactory)
     read_permission = factory.Faker('random_element', elements=['public', 'authenticated', 'team', 'author'])
     edit_permission = factory.Faker('random_element', elements=['public', 'authenticated', 'team', 'author'])
+    
+    @factory.post_generation
+    def check_permissions(obj, create, extracted, **kwargs):
+        if obj.read_permission not in dict(Post.PERMISSIONS).keys() or obj.edit_permission not in dict(Post.PERMISSIONS).keys():
+            raise ValidationError('Invalid permission specified.')
     
 class LikesFactory(DjangoModelFactory):
     class Meta:

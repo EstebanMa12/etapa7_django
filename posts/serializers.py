@@ -10,7 +10,8 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ('title',
                 'content',
                 'read_permission', 
-                'edit_permission')
+                'edit_permission', 
+                'author',)
         
     def create(self, validated_data):
         return Post.objects.create(**validated_data)

@@ -107,9 +107,10 @@ class TestPostModel:
     @pytest.mark.django_db
     def test_post_model_invalid_permissions(self, post_factory, user_factory):
         user = user_factory(username='test-user')
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as e:
             post = post_factory(title='test-post',
                                 content='test-content', 
                                 author=user,
                                 read_permission='invalid_permission',
                                 edit_permission='invalid_permission')
+        assert str(e.value) == "['Invalid permission specified.']"
