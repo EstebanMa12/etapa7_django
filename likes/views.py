@@ -76,27 +76,31 @@ class LikeListView(generics.ListAPIView):
         Vista para ver los likes de los post a los cuales tengo permiso
     """
     serializer_class = LikeSerializer
-    permission_classes = [IsAuthenticated,
-                            IsCustomAdminUser,
-                            UserHasReadPermission]
     pagination_class = PageNumberPagination
     filter_class = LikeFilter 
     
     def get_queryset(self):
+        user = self.request.user
+
         try:
-            allowed_posts = Post.objects.filter(
-                Q(read_permission='public') |
-                Q(read_permission='authenticated') |
-                Q(author=self.request.user) |
-                Q(author__team=self.request.user.team)
-            )
-            
-            queryset = Like.iltezr(post_id__in=Subquery(allowed_posts.values('id')))
-            
-            return queryset
+            if user.is_authenticated and user.is_admin:
+                queryset = LikeFilter(self.request.query_params, queryset=Like.objects.all()).qs
+            elif not user.is_authenticated:
+                allowed_posts = Post.objects.filter(read_permission='public')
+                queryset = LikeFilter(self.request.query_params, queryset=Like.objects.filter(post_id__in=allowed_posts)).qs
+            else:
+                allowed_posts = Post.objects.filter(
+                    Q(read_permission='public') |
+                    Q(read_permission='authenticated') |
+                    Q(author=self.request.user) |
+                    Q(author__team=self.request.user.team)
+                )
+                queryset = LikeFilter(self.request.query_params, queryset=Like.objects.filter(post_id__in=allowed_posts)).qs
         except ObjectDoesNotExist as e:
-            # Manejo de la excepción cuando no se encuentran posts permitidos
             return Response({"detail": "No se encontraron posts permitidos"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            # Manejo de otras excepciones
+            # Handle any other exceptions
             return Response({"detail": "Ocurrió un error al procesar la solicitud"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return queryset
+    

@@ -13,9 +13,10 @@ from avanzatech_blog.permissions import UserHasEditPermission, UserHasReadPermis
 from rest_framework.pagination import PageNumberPagination
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import PermissionDenied
-
+from django.db.models import Q, Subquery
 
 # View for create POST and List
+
 class PostCreateView(generics.ListCreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
@@ -24,8 +25,7 @@ class PostCreateView(generics.ListCreateAPIView):
     def get_permissions(self):
         if self.request.method == 'POST':
             return [IsAuthenticated()]
-        else:
-            return [UserHasReadPermission()]  
+        return super().get_permissions()
     
     def perform_create(self, serializer):
         try:
@@ -34,20 +34,32 @@ class PostCreateView(generics.ListCreateAPIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
     def get_queryset(self):
-        try:    
-            queryset = Post.objects.all()
-            # Filtrado
-            for post in list(queryset):
-                object_permissions  = UserHasReadPermission()
-                if not object_permissions.has_object_permission(self.request, self, post):
-                    queryset = queryset.exclude(id=post.id)
-        except ObjectDoesNotExist:
-            queryset = Post.objects.none()
-        except Exception as e:
-            print(f"Error al obtener los posts: {e}")
-            queryset = Post.objects.none()
+        user = self.request.user
+
+        if user.is_authenticated and user.is_admin:
+            # Admin has all permissions, return all posts
+            return Post.objects.all()
+        
+        try:
+            allowed_posts = Post.objects.filter(
+                Q(read_permission=Post.PUBLIC) |
+                Q(read_permission=Post.AUTHENTICATED) |
+                Q(author=user) |
+                Q(author__team=user.team)
+            )
+
+            queryset = super().get_queryset().filter(id__in=Subquery(allowed_posts.values('id')))
             
-        return queryset
+            return queryset
+        
+        except ObjectDoesNotExist as e:
+            # Manejo de la excepción cuando no se encuentran posts permitidos
+            return Response({"detail": "No se encontraron posts permitidos"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # Manejo de otras excepciones
+            return Response({"detail": "Ocurrió un error al procesar la solicitud"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+        
 
 # View for edit POST
 class PostEditView(generics.UpdateAPIView):
