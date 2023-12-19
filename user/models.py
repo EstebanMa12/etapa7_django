@@ -24,30 +24,37 @@ class CustomUserManager(BaseUserManager):
                     is_admin=False,
                     is_superuser=False,
                     **extra_fields):
-        try:
-            validate_email(username)
-        except ValidationError:
-            raise ValueError('Invalid email address')
-        
-        try:
-            validate_password(password)
-        except ValidationError:
-            raise ValueError('Invalid password')
-            
         
         if not username:
             raise ValueError('Users must have a username')
         
         if not team:
             raise ValueError('Users must have a team')
-        username = self.normalize_email(username)
         
-        user = self.model(username=username,
+        try:
+            validate_email(username)
+        except ValidationError:
+            print(f"Actual error message: {e}")
+            raise ValueError('Invalid email address')
+        
+        try:
+            validate_password(password)
+        except ValidationError:
+            
+            raise ValueError('Invalid password')
+            
+        normalize_username = self.normalize_email(username)
+        
+        
+        
+        user = self.model(
+                        username=normalize_username,
                         team=team,
-                        is_admin = is_admin,
-                        is_superuser = is_superuser,
+                        is_admin=is_admin,
+                        is_superuser=is_superuser,
                         **extra_fields,
                         )
+        
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -56,18 +63,18 @@ class CustomUserManager(BaseUserManager):
                         username,
                         password,
                         team=None,
-                        is_admin=True,
-                        is_superuser=True,
+                        admin=True,
+                        superuser=True,
                         **extra_fields):
-# Asigna el valor predeterminado si no se proporciona un equipo
+        # Asigna el valor predeterminado si no se proporciona un equipo
         if team is None:
             team = "SuperUser"
 
         return self.create_user(username=username,
                                 password=password,
                                 team=team,
-                                is_admin=True,
-                                is_superuser=True,
+                                is_admin=admin,
+                                is_superuser=superuser,
                                 **extra_fields)
 
 class CustomUser(PermissionsMixin, AbstractBaseUser, DefaultModel):

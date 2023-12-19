@@ -4,15 +4,16 @@ from likes.models import Like
 from user.models import CustomUser
 from posts.models import Post
 from comments.models import Comment
+
 class UserFactory(DjangoModelFactory):
     class Meta:
         model = CustomUser
-        
-    username = factory.Sequence(lambda n: 'user{}'.format(n))
-    team = factory.Sequence(lambda n: 'team{}'.format(n))
-    is_superuser = False
-    is_admin = False
+
+    username = factory.Sequence(lambda n: 'user{}@test.com'.format(n))
     password = factory.PostGenerationMethodCall('set_password', 'password')
+    team = factory.Sequence(lambda n: 'team{}'.format(n))
+    is_admin = False
+    is_superuser = False
     
 class PostFactory(DjangoModelFactory):
     class Meta:

@@ -1,4 +1,5 @@
 import pytest
+from django.core.exceptions import ValidationError
 
 
 pytestmark = pytest.mark.django_db
@@ -95,3 +96,20 @@ class TestPostModel:
                             read_permission='public',
                             edit_permission='public')
         assert str(post._meta.ordering) == "['-created_at']"
+    
+    @pytest.mark.django_db
+    def test_post_model_creation_dates(self, post_factory, user_factory):
+        user = user_factory(username='test-user')
+        post1 = post_factory(title='post-1', content='content-1', author=user)
+        post2 = post_factory(title='post-2', content='content-2', author=user)
+        assert post1.created_at < post2.created_at
+    
+    @pytest.mark.django_db
+    def test_post_model_invalid_permissions(self, post_factory, user_factory):
+        user = user_factory(username='test-user')
+        with pytest.raises(ValidationError):
+            post = post_factory(title='test-post',
+                                content='test-content', 
+                                author=user,
+                                read_permission='invalid_permission',
+                                edit_permission='invalid_permission')
