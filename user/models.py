@@ -33,9 +33,8 @@ class CustomUserManager(BaseUserManager):
         
         try:
             validate_email(username)
-        except ValidationError:
-            print(f"Actual error message: {e}")
-            raise ValueError('Invalid email address')
+        except ValidationError as e:
+            raise ValueError(f'Invalid email address:{e}')
         
         try:
             validate_password(password)

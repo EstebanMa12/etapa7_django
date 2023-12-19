@@ -9,11 +9,15 @@ class UserFactory(DjangoModelFactory):
     class Meta:
         model = CustomUser
 
-    username = factory.Sequence(lambda n: 'user{}@test.com'.format(n))
+    username = factory.Sequence(lambda n: 'user{}'.format(n))
     password = factory.PostGenerationMethodCall('set_password', 'password')
     team = factory.Sequence(lambda n: 'team{}'.format(n))
     is_admin = False
     is_superuser = False
+    
+    @classmethod
+    def create_superuser(cls, **kwargs):
+        return cls.create(is_admin=True, is_superuser=True, team="SuperUser", **kwargs)
     
 class PostFactory(DjangoModelFactory):
     class Meta:

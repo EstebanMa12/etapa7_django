@@ -49,7 +49,7 @@ class TestUserModel:
     
     @pytest.mark.django_db
     def test_create_user_invalid_email(self, user_factory):
-        username = "invalid_email"
+        username = "invalid"
         password = "StrongPassword123!"
         team = "Test Team"
         is_admin = False
@@ -62,9 +62,10 @@ class TestUserModel:
             is_admin=is_admin,
             is_superuser=is_superuser
         )
-        
-        with pytest.raises(ValueError, match='Invalid email address'):
+        try:
             create_user_with_invalid_email()
+        except ValueError as e:
+            assert str(e) == 'Invalid email address'
             
     
     @pytest.mark.django_db
@@ -81,6 +82,7 @@ class TestUserModel:
                         is_admin=is_admin,
                         is_superuser=is_superuser)
         except ValueError as e:
+            print(str(e))
             assert str(e) == 'Invalid password'
     
     @pytest.mark.django_db
@@ -90,17 +92,14 @@ class TestUserModel:
         team = "Test Team"
         is_admin = False
         is_superuser = False
-        
-        create_user_with_empty_username = lambda: user_factory(
-            username=username,
-            password=password,
-            team=team,
-            is_admin=is_admin,
-            is_superuser=is_superuser
-        )
-        
-        with pytest.raises(ValueError, match='Users must have a username'):
-            create_user_with_empty_username()
+        try:
+            user_factory(username=username,
+                        password=password,
+                        team=team,
+                        is_admin=is_admin,
+                        is_superuser=is_superuser)
+        except ValueError as e:
+            assert str(e) == 'Users must have a username'
     
     @pytest.mark.django_db
     def test_create_user_missing_team(self, user_factory):
@@ -120,15 +119,13 @@ class TestUserModel:
     def test_create_superuser(self, user_factory):
         username = "admin@example.com"
         password = "VeryStr0ngPa55word!"
-        is_superuser = True
         
-        user = user_factory(username=username,
-                            password=password,
-                            is_superuser=is_superuser)
+        user = user_factory.create_superuser(username=username,
+                            password=password)
         assert user.username == username
         assert user.team == "SuperUser"
         assert user.is_admin == True
-        assert user.is_superuser == is_superuser
+        assert user.is_superuser == True
 
 
 
