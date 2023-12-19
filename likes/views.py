@@ -21,7 +21,6 @@ class LikeCreateView(generics.GenericAPIView):
     serializer_class = LikeSerializer
     permission_classes = [
         IsAuthenticated,
-        IsCustomAdminUser,
         UserHasReadPermission
     ]
     
@@ -96,7 +95,7 @@ class LikeListView(generics.ListAPIView):
                     Q(author__team=self.request.user.team)
                 )
                 queryset = LikeFilter(self.request.query_params, queryset=Like.objects.filter(post_id__in=allowed_posts)).qs
-        except ObjectDoesNotExist as e:
+        except ObjectDoesNotExist:
             return Response({"detail": "No se encontraron posts permitidos"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             # Handle any other exceptions

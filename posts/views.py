@@ -14,18 +14,19 @@ from rest_framework.pagination import PageNumberPagination
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import PermissionDenied
 from django.db.models import Q, Subquery
+from rest_framework import serializers
 
 # View for create POST and List
 
 class PostCreateView(generics.ListCreateAPIView):
-    queryset = Post.objects.all()
+    """
+        Vista para la creación y listado de post a los que tengo permiso
+    """
     serializer_class = PostSerializer
     pagination_class = PageNumberPagination
     
     def get_permissions(self):
-        if self.request.method == 'POST':
-            return [IsAuthenticated()]
-        return super().get_permissions()
+        return [IsAuthenticated()]
     
     def perform_create(self, serializer):
         try:
@@ -35,31 +36,33 @@ class PostCreateView(generics.ListCreateAPIView):
     
     def get_queryset(self):
         user = self.request.user
-
-        if user.is_authenticated and user.is_admin:
-            # Admin has all permissions, return all posts
-            return Post.objects.all()
-        
         try:
-            allowed_posts = Post.objects.filter(
+            if user.is_authenticated and user.is_admin:
+                # Admin has all permissions, return all posts
+                queryset= Post.objects.all()
+            # If not authenticated only view the post with read_permissions=='public'
+            elif not user.is_authenticated:
+                queryset= Post.objects.filter(read_permission=Post.PUBLIC)
+        
+            else:
+                allowed_posts = Post.objects.filter(
                 Q(read_permission=Post.PUBLIC) |
                 Q(read_permission=Post.AUTHENTICATED) |
                 Q(author=user) |
                 Q(author__team=user.team)
             )
 
-            queryset = super().get_queryset().filter(id__in=Subquery(allowed_posts.values('id')))
+                queryset = Post.objects.filter(id__in=Subquery(allowed_posts.values('id')))
             
-            return queryset
-        
-        except ObjectDoesNotExist as e:
+        except ObjectDoesNotExist:
             # Manejo de la excepción cuando no se encuentran posts permitidos
             return Response({"detail": "No se encontraron posts permitidos"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
+            print(f"Excepcion {str(e)}")
             # Manejo de otras excepciones
             return Response({"detail": "Ocurrió un error al procesar la solicitud"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
         
+        return queryset 
 
 # View for edit POST
 class PostEditView(generics.UpdateAPIView):
