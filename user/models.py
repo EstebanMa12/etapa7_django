@@ -31,21 +31,12 @@ class CustomUserManager(BaseUserManager):
         if not team:
             raise ValueError('Users must have a team')
         
-        try:
-            validate_email(username)
-        except ValidationError as e:
-            raise ValueError(f'Invalid email address:{e}')
+        #Dado que se requiere que el almacenado de los usuarios falle si no cumple con las excepciones, se deja por fuera las siguientes validaciones de un try/except
+        validate_email(username)
+        validate_password(password)
         
-        try:
-            validate_password(password)
-        except ValidationError:
-            
-            raise ValueError('Invalid password')
-            
         normalize_username = self.normalize_email(username)
-        
-        
-        
+                
         user = self.model(
                         username=normalize_username,
                         team=team,
