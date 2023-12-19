@@ -108,18 +108,25 @@ class PostDeleteView(generics.DestroyAPIView):
     """
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    lookup_field = 'pk'
     permission_classes = [
-        IsAuthenticated,
         UserHasEditPermission
         ]
     
     def destroy(self, request, *args, **kwargs):
         try:
             post = self.get_object()
-            self.check_object_permissions(request, post)
-            post.delete()
-            return Response({"message": "Post deleted successfully"}, status=status.HTTP_200_OK)
+            permissions = UserHasEditPermission()
+            
+            if not permissions.has_object_permission(request, self, post):
+                raise PermissionDenied("No tienes permiso para eliminar este post")
+            
+            self.perform_destroy(post)
+            return self.get_response()
         except Http404:
             return Response({"error": "Post doesn't exist"}, status=status.HTTP_400_BAD_REQUEST)
+        
+    def get_response(self):
+                return Response({"message": "Post deleted successfully"}, status=status.HTTP_200_OK)
 
 
