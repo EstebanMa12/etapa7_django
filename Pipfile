@@ -11,6 +11,7 @@ factory-boy = "*"
 pytest-cov = "*"
 pytest-factoryboy = "*"
 pytest-django = "*"
+coreapi = "*"
 
 [dev-packages]
 
