@@ -19,7 +19,8 @@ class UserFactory(DjangoModelFactory):
     @classmethod
     def create_superuser(cls, **kwargs):
         return cls.create(is_admin=True, is_superuser=True, team="SuperUser", **kwargs)
-    
+
+# This is for test the serializers and models
 class PostFactory(DjangoModelFactory):
     class Meta:
         model = Post

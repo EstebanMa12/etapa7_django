@@ -17,7 +17,7 @@ class UserHasEditPermission(BasePermission):
             return False
         
 class UserHasReadPermission(BasePermission):
-        
+    message = "You do not have permission to perform this action."   
     def has_object_permission(self, request, view, obj):
         # Comprueba cuales son los permisos de lectura del post
         if request.user.is_authenticated:

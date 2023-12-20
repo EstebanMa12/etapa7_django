@@ -12,6 +12,7 @@ import django_filters
 from django.db.models import Q, Subquery
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.exceptions import PermissionDenied
 
 
 # Create your views here.
@@ -33,16 +34,18 @@ class CommentCreateView(generics.GenericAPIView):
         """
         Crea un comentario para un post.
         """
-        post = self.get_object()
-        self.check_object_permissions(request, post) #Verificar permisos del objeto
-        
+        try:
+            post = self.get_object()
+            self.check_object_permissions(request, post) #Verificar permisos del objeto
+        except PermissionDenied:
+            return Response({"error": "Authentication required"}, status=status.HTTP_403_FORBIDDEN)
         content = request.data.get('content')  # Obtener el contenido del comentario de la solicitud
         
         try:
             Comment.objects.create(user=request.user, post=post, content = content)
             return Response({"message": "Comment added successfully"}, status=status.HTTP_200_OK)  # return a 200 OK status
         except IntegrityError:
-            return Response({"error": "Comment already exists"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Error creating comment"}, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, post_id):
         """
