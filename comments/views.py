@@ -34,11 +34,14 @@ class CommentCreateView(generics.GenericAPIView):
         """
         Crea un comentario para un post.
         """
-        try:
-            post = self.get_object()
-            self.check_object_permissions(request, post) #Verificar permisos del objeto
-        except PermissionDenied:
-            return Response({"error": "Authentication required"}, status=status.HTTP_403_FORBIDDEN)
+        
+        print(request.user)
+        # try:
+        post = self.get_object()
+        self.check_object_permissions(request, post) #Verificar permisos del objeto
+        # except PermissionDenied:
+        #     return Response({"error": "No tienes permiso para realizar esta acción"}, status=status.HTTP_403_FORBIDDEN)
+        
         content = request.data.get('content')  # Obtener el contenido del comentario de la solicitud
         
         try:
@@ -55,7 +58,7 @@ class CommentCreateView(generics.GenericAPIView):
         self.check_object_permissions(request, post) #Verificar permisos del objeto
         
         # Obtener el último comentario del post
-        last_comment = Comment.objects.filter(post=post).order_by('-created_at').first()
+        last_comment = Comment.objects.filter(post=post, user=request.user).order_by('-created_at').first()
         
         if last_comment:
             last_comment.delete()
