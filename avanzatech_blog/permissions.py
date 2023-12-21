@@ -1,20 +1,26 @@
 from rest_framework.permissions import BasePermission, DjangoObjectPermissions
 from posts.models import Post
 class UserHasEditPermission(BasePermission):
+    message = "You do not have permission to perform this action."
     def has_object_permission(self, request, view, obj):
-        # Comprueba cuales son los permisos de edicion del post
-        if request.user.is_admin:
-            return True
-        elif obj.edit_permission == Post.PUBLIC:
-            return True
-        elif obj.edit_permission == Post.AUTHENTICATED:
-            return request.user.is_authenticated
-        elif obj.edit_permission == Post.TEAM:
-            return request.user.team == obj.author.team
-        elif obj.edit_permission == Post.AUTHOR:
-            return request.user == obj.author
+        if request.user.is_authenticated:
+            # Comprueba cuales son los permisos de edicion del post
+            if request.user.is_admin:
+                return True
+            elif obj.edit_permission == Post.PUBLIC:
+                return True
+            elif obj.edit_permission == Post.AUTHENTICATED:
+                return request.user.is_authenticated
+            elif obj.edit_permission == Post.TEAM:
+                return request.user.team == obj.author.team
+            elif obj.edit_permission == Post.AUTHOR:
+                return request.user == obj.author
         else:
-            return False
+            # Si el usuario no está autenticado, puede editar los post con permisos de edicion 'public'
+            if obj.edit_permission == Post.PUBLIC:
+                return True
+            
+        return False
         
 class UserHasReadPermission(BasePermission):
     message = "You do not have permission to perform this action."   

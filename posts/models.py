@@ -17,7 +17,7 @@ class Post(DefaultModel, models.Model):
         (TEAM, 'Team'),
         (AUTHOR, 'Author'),
     )
-    
+    #id
     title = models.CharField(max_length=100)
     content = models.TextField(max_length=1000)
     author = models.ForeignKey(CustomUser, on_delete=models.CASCADE)

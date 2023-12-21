@@ -20,7 +20,7 @@ from rest_framework import serializers
 
 class PostCreateView(generics.ListCreateAPIView):
     """
-        Vista para la creación y listado de post a los que tengo permiso
+    Vista para la creación y listado de post a los que tengo permiso
     """
     serializer_class = PostSerializer
     pagination_class = PageNumberPagination
@@ -35,6 +35,12 @@ class PostCreateView(generics.ListCreateAPIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
     def get_queryset(self):
+        """
+        Obtiene el conjunto de consultas para los posts permitidos según el usuario autenticado.
+        Si el usuario es un administrador, se devuelven todos los posts.
+        Si el usuario no está autenticado, se devuelven solo los posts con permiso de lectura 'público'.
+        Si el usuario está autenticado pero no es un administrador, se devuelven los posts permitidos según los permisos de lectura y el equipo del usuario.
+        """
         user = self.request.user
         try:
             if user.is_authenticated and user.is_admin:
@@ -62,10 +68,13 @@ class PostCreateView(generics.ListCreateAPIView):
             # Manejo de otras excepciones
             return Response({"detail": "Ocurrió un error al procesar la solicitud"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        return queryset 
+        return queryset
 
 # View for edit POST
 class PostEditView(generics.UpdateAPIView):
+    """
+    View for editing a post.
+    """
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [UserHasEditPermission]
@@ -80,17 +89,30 @@ class PostEditView(generics.UpdateAPIView):
         
 class PostDetailView(generics.RetrieveAPIView):
     """
-        Vista para ver un solo post
+    Vista para ver un solo post
+
+    Attributes:
+        queryset (QuerySet): The queryset of all posts.
+        serializer_class (Serializer): The serializer class for the post model.
+        lookup_field (str): The field used to retrieve the post.
+        permission_classes (list): The list of permission classes for the view.
     """
+
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     lookup_field = 'id'
     permission_classes = [UserHasReadPermission]
     
     def get_object(self):
-        # post_id = self.kwargs['id']
-        # return get_object_or_404(Post, id=post_id)
-        
+        """
+        Retrieve the post object and check permissions.
+
+        Returns:
+            Post: The post object.
+
+        Raises:
+            PermissionDenied: If the user does not have permission to view the post.
+        """
         obj = super().get_object()
 
         # Verificar los permisos personalizados
@@ -104,7 +126,9 @@ class PostDetailView(generics.RetrieveAPIView):
 # DELETE POST
 class PostDeleteView(generics.DestroyAPIView):
     """
-        Vista para eliminar un post
+    Vista para eliminar un post
+    
+    Esta vista permite eliminar un post existente. Se requiere permiso de edición para realizar esta acción.
     """
     queryset = Post.objects.all()
     serializer_class = PostSerializer
