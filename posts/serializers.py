@@ -12,9 +12,9 @@ class PostSerializer(serializers.ModelSerializer):
                 'read_permission', 
                 'edit_permission', 
                 'author',)
-        
-    def create(self, validated_data):
-        return Post.objects.create(**validated_data)
+        read_only_fields = (
+            'author',
+        )
     
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)

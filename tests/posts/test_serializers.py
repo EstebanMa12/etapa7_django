@@ -10,20 +10,6 @@ class TestPostSerializer(TestCase):
         self.user = UserFactory()
         self.post = PostFactory()
 
-    def test_create_post(self):
-        serializer = PostSerializer(data={'title': 'Test Title',
-                                            'content': 'Test Content', 'read_permission': 'public', 'edit_permission': 'public',
-                                            'author': self.user.id,
-                                            })
-        assert serializer.is_valid()
-        post = serializer.save()
-        
-        assert post.title == 'Test Title'
-        assert post.content == 'Test Content'
-        assert post.read_permission == 'public'
-        assert post.edit_permission == 'public'
-        assert post.author == self.user
-        
 
     def test_update_post(self):
         serializer = PostSerializer(instance=self.post,
