@@ -67,3 +67,10 @@ class PostObjectPermissions(DjangoObjectPermissions):
 
         # Si ninguna de las condiciones anteriores se cumple, el usuario no tiene permiso
         return False
+
+class IsCustomAdminUser(BasePermission):
+    """
+    Allows access only to admin users.
+    """
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.is_admin
