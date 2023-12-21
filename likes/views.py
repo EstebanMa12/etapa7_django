@@ -76,14 +76,20 @@ class LikeFilter(django_filters.FilterSet):
         model = Like
         fields = ['user_id', 'post_id']
 
-        
+class CustomPagination(PageNumberPagination):
+    """
+        Paginación personalizada
+    """
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 # LIST OF LIKES
 class LikeListView(generics.ListAPIView):
     """
         Vista para ver los likes de los post a los cuales tengo permiso
     """
     serializer_class = LikeSerializer
-    pagination_class = 20
+    pagination_class = CustomPagination
     filter_class = LikeFilter 
     
     def get_queryset(self):
