@@ -12,6 +12,7 @@ pytest-cov = "*"
 pytest-factoryboy = "*"
 pytest-django = "*"
 coreapi = "*"
+drf-yasg = "*"
 
 [dev-packages]
 
