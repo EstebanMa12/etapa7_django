@@ -1,4 +1,4 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, DjangoObjectPermissions
 from posts.models import Post
 class UserHasEditPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -35,7 +35,35 @@ class UserHasReadPermission(BasePermission):
                 return True
 
         return False
-        
-class IsCustomAdminUser(BasePermission):
-    def has_permission(self, request, view):
-        return bool(request.user.is_authenticated and request.user.is_admin)
+
+class PostObjectPermissions(DjangoObjectPermissions):
+    # Sobreescribe el método has_object_permission para que se ajuste a los permisos de lectura y edición de los posts
+    def has_object_permission(self, request, view, obj):
+        # Asegúrate de que obj es una instancia de Post
+        if not isinstance(obj, Post):
+            return False
+
+        # Comprueba los permisos de lectura si la solicitud es GET
+        if request.method == 'GET':
+            if obj.read_permission == Post.PUBLIC:
+                return True
+            elif obj.read_permission == Post.AUTHENTICATED and request.user.is_authenticated:
+                return True
+            elif obj.read_permission == Post.TEAM and request.user.team == obj.author.team:
+                return True
+            elif obj.read_permission == Post.AUTHOR and request.user == obj.author:
+                return True
+
+        # Comprueba los permisos de edición si la solicitud es PUT, PATCH o DELETE
+        elif request.method in ['PUT', 'PATCH', 'DELETE']:
+            if obj.edit_permission == Post.PUBLIC:
+                return True
+            elif obj.edit_permission == Post.AUTHENTICATED and request.user.is_authenticated:
+                return True
+            elif obj.edit_permission == Post.TEAM and request.user.team == obj.author.team:
+                return True
+            elif obj.edit_permission == Post.AUTHOR and request.user == obj.author:
+                return True
+
+        # Si ninguna de las condiciones anteriores se cumple, el usuario no tiene permiso
+        return False
