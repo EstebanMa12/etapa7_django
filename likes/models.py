@@ -6,7 +6,10 @@ from user.models import CustomUser, DefaultModel
 # Create your models here.
 # a model for likes
 class Like(DefaultModel, models.Model):
-    # Like model
+    """
+    Represents a like on a post by a user.
+    """
+
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     

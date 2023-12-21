@@ -74,6 +74,24 @@ class PostCreateView(generics.ListCreateAPIView):
 class PostEditView(generics.UpdateAPIView):
     """
     View for editing a post.
+
+    This view allows users to update an existing post. It uses the `UpdateAPIView` class from the `generics` module
+    provided by Django REST Framework. The `PostEditView` class inherits from `UpdateAPIView` and defines the necessary
+    attributes and methods for updating a post.
+
+    Attributes:
+        queryset (QuerySet): The queryset of all posts.
+        serializer_class (Serializer): The serializer class used for serializing and deserializing post data.
+        permission_classes (list): The list of permission classes required to access this view.
+        lookup_field (str): The field used for looking up the post to be edited.
+
+    Methods:
+        perform_update(serializer): Performs the update operation on the post.
+
+    Example:
+        To update a post, make a PUT request to the URL associated with this view, providing the post ID in the URL
+        and the updated post data in the request body.
+
     """
     queryset = Post.objects.all()
     serializer_class = PostSerializer

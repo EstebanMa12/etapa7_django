@@ -17,8 +17,9 @@ from rest_framework.exceptions import PermissionDenied
 # Create your views here.
 class LikeCreateView(generics.GenericAPIView):
     """
-        Vista para crear y eliminar likes
+    Vista para crear y eliminar likes
     """
+
     serializer_class = LikeSerializer
     permission_classes = [
         IsAuthenticated,
@@ -26,6 +27,9 @@ class LikeCreateView(generics.GenericAPIView):
     ]
     
     def get_object(self):
+        """
+        Obtiene el objeto Post correspondiente al post_id proporcionado en los parámetros de la URL.
+        """
         post_id = self.kwargs['post_id']
         return get_object_or_404(Post, id=post_id)
     

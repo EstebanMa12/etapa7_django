@@ -17,13 +17,33 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
     
 class CustomUserManager(BaseUserManager):
-    # Custom user manager
+    """
+    Custom user manager for creating and managing user objects.
+    """
+
     def create_user(self, username,
                     password=None,
                     team=None,
                     is_admin=False,
                     is_superuser=False,
                     **extra_fields):
+        """
+        Creates a new user object with the provided username, password, team, and additional fields.
+
+        Args:
+            username (str): The username of the user.
+            password (str, optional): The password of the user. Defaults to None.
+            team (str, optional): The team of the user. Defaults to None.
+            is_admin (bool, optional): Whether the user is an admin. Defaults to False.
+            is_superuser (bool, optional): Whether the user is a superuser. Defaults to False.
+            **extra_fields: Additional fields to be included in the user object.
+
+        Returns:
+            User: The created user object.
+
+        Raises:
+            ValueError: If the username or team is not provided.
+        """
         
         if not username:
             raise ValueError('Users must have a username')
@@ -56,6 +76,23 @@ class CustomUserManager(BaseUserManager):
                         admin=True,
                         superuser=True,
                         **extra_fields):
+        """
+        Creates a new superuser object with the provided username, password, team, and additional fields.
+
+        Args:
+            username (str): The username of the superuser.
+            password (str): The password of the superuser.
+            team (str, optional): The team of the superuser. Defaults to None.
+            admin (bool, optional): Whether the superuser is an admin. Defaults to True.
+            superuser (bool, optional): Whether the superuser is a superuser. Defaults to True.
+            **extra_fields: Additional fields to be included in the superuser object.
+
+        Returns:
+            User: The created superuser object.
+
+        Raises:
+            ValueError: If the username is not provided.
+        """
         # Asigna el valor predeterminado si no se proporciona un equipo
         if team is None:
             team = "SuperUser"

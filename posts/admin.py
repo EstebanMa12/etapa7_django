@@ -14,6 +14,9 @@ class CommentInline(admin.TabularInline):
     extra = 1
 #Models for posts
 class PostAdmin(admin.ModelAdmin):
+    """
+    Admin class for managing Post model in the Django admin site.
+    """
     list_display = ('id','title', 'author', 'edit_permission','read_permission')
     list_filter = ('id','author')
     search_fields = ('title', 'author__username')
