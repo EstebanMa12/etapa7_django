@@ -109,7 +109,7 @@ class CommentListView(generics.ListAPIView):
                 queryset = CommentFilter(self.request.query_params, queryset=Comment.objects.filter(post_id__in=allowed_posts)).qs
         except ObjectDoesNotExist:
             return Response({"detail": "No se encontraron posts permitidos"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
+        except Exception:
             # Handle any other exceptions
             return Response({"detail": "Ocurrió un error al procesar la solicitud"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

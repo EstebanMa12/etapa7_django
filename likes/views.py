@@ -11,6 +11,7 @@ from django.db import IntegrityError
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q, Subquery
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.exceptions import PermissionDenied
 
 
 # Create your views here.
@@ -32,8 +33,11 @@ class LikeCreateView(generics.GenericAPIView):
         """
         Crea un like para un post.
         """
-        post = self.get_object()
-        self.check_object_permissions(request, post) #Verificar permisos del objeto
+        try:
+            post = self.get_object()
+            self.check_object_permissions(request, post) #Verificar permisos del objeto
+        except PermissionDenied:
+            return Response({"error": "You do not have permission to perform this action."}, status=status.HTTP_403_FORBIDDEN)
         
         try:
             Like.objects.create(user=request.user, post=post)
@@ -45,14 +49,18 @@ class LikeCreateView(generics.GenericAPIView):
         """
         Elimina un like de un post.
         """
-        post = self.get_object()
-        self.check_object_permissions(request, post) #Verificar permisos del objeto
-        
         try:
-            Like.objects.filter(user=request.user, post=post).delete()
-            return Response({"message": "Like deleted successfully"}, status=status.HTTP_200_OK)  # return a 200 OK status
-        except IntegrityError:
+            post = self.get_object()
+            self.check_object_permissions(request, post) #Verificar permisos del objeto
+        except PermissionDenied:
+            return Response({"error": "You do not have permission to perform this action."}, status=status.HTTP_403_FORBIDDEN)
+        
+        like = Like.objects.filter(user=request.user, post=post)
+        if not like.exists():
             return Response({"error": "Like does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        like.delete()
+        return Response({"message": "Like deleted successfully"}, status=status.HTTP_200_OK)  # return a 200 OK status
 
 
 # FILTERS OF LIKES 
@@ -97,7 +105,7 @@ class LikeListView(generics.ListAPIView):
                 queryset = LikeFilter(self.request.query_params, queryset=Like.objects.filter(post_id__in=allowed_posts)).qs
         except ObjectDoesNotExist:
             return Response({"detail": "No se encontraron posts permitidos"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
+        except Exception:
             # Handle any other exceptions
             return Response({"detail": "Ocurrió un error al procesar la solicitud"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

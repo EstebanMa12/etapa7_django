@@ -50,21 +50,3 @@ class CommentsFactory(DjangoModelFactory):
     post = factory.SubFactory(PostFactory)
     user = factory.SubFactory(UserFactory)
     content = factory.Sequence(lambda n: 'content{}'.format(n))
-    
-class PostFactoryWithPermissions(DjangoModelFactory):
-    class Meta:
-        model = Post
-        
-    title = factory.Faker('text', max_nb_chars=50)  # Update the max_nb_chars value to a shorter length
-    content = factory.Faker('text', max_nb_chars=1000)  # Update the max_nb_chars value to a shorter length
-    author = factory.SubFactory(UserFactory)
-    
-    read_permission = factory.Iterator(['public'], cycle=False)
-    edit_permission = factory.Iterator(['author'], cycle=False)
-    
-    @factory.post_generation
-    def check_permissions(obj, create, extracted, **kwargs):
-        if obj.read_permission not in dict(Post.PERMISSIONS).keys() or obj.edit_permission not in dict(Post.PERMISSIONS).keys():
-            raise ValidationError('Invalid permission specified.')
-
-    # post = PostFactoryWithPermissions(read_permission='public', edit_permission='author')
