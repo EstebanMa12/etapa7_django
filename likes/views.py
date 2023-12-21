@@ -83,7 +83,7 @@ class LikeListView(generics.ListAPIView):
         Vista para ver los likes de los post a los cuales tengo permiso
     """
     serializer_class = LikeSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = 20
     filter_class = LikeFilter 
     
     def get_queryset(self):

@@ -102,6 +102,7 @@ class PostDetailView(generics.RetrieveAPIView):
     serializer_class = PostSerializer
     lookup_field = 'id'
     permission_classes = [UserHasReadPermission]
+    pagination_class = 10
     
     def get_object(self):
         """

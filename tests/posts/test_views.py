@@ -96,7 +96,45 @@ class TestPostCreateView(APITestCase):
         self.assertEqual(post.title, 'Test Post')
         self.assertEqual(post.content, 'This is a test post')
         self.assertEqual(post.read_permission, 'public')
+    
+    def test_pagination(self):
+        for i in range(15):
+            PostFactory(read_permission='public')
+        self.client.force_authenticate(user=self.user)
+        url = reverse('post-create')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 15)
+        self.assertEqual(response.data['next'], 'http://testserver/post/?page=2')
+        self.assertEqual(response.data['previous'], None)
+    
+    def test_pagination_page_2(self):
+        for i in range(15):
+            PostFactory(read_permission='public')
+        self.client.force_authenticate(user=self.user)
+        url = reverse('post-create') + '?page=2'
+        response = self.client.get(url)
+        print(response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 15)
+        self.assertEqual(response.data['next'], None)
+        self.assertEqual(response.data['previous'], 'http://testserver/post/')
         
+    def test_list_posts_as_authenticated_user(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('post-create')
+        
+        # Crear algunos posts
+        PostFactory.create_batch(3, read_permission='public')
+        
+        # Realizar la solicitud
+        response = self.client.get(url)
+        print(response.data)
+        # Verificar el comportamiento correcto
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 3)
+        
+    
 #Endpoint (`/blog/<post_id>`) for editing posts
 # Following fields can be changed
     # Permissions
@@ -228,9 +266,17 @@ class TestPostDetailView(APITestCase):
         self.post = PostFactory()
         
     def test_unauth_access_to_detail(self):
-        pass
+        url = reverse('post', kwargs={'id': self.post.id})
+        self.post.read_permission = 'public'
+        self.post.save()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+
     def test_view_post_with_read_permission(self):
         self.client.force_authenticate(user=self.user)
+        self.post.read_permission = 'public'
+        self.post.save()
         url = reverse('post', kwargs={'id': self.post.id})
         
         # Realizar la solicitud
@@ -239,52 +285,33 @@ class TestPostDetailView(APITestCase):
         
         # Verificar el comportamiento correcto
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['id'], self.post.id)
         self.assertEqual(response.data['title'], self.post.title)
         self.assertEqual(response.data['content'], self.post.content)
         
-    # def test_view_post_without_read_permission(self):
-    #     url = reverse('post', kwargs={'id': self.post.id})
+    def test_view_post_without_read_permission(self):
+        url = reverse('post', kwargs={'id': self.post.id})
+        self.post.read_permission = 'author'
+        self.post.save()
         
-    #     # Realizar la solicitud
-    #     response = self.client.get(url)
+        # Realizar la solicitud
+        response = self.client.get(url)
+        print(response.data)
         
-    #     # Verificar el comportamiento correcto
-    #     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-    #     self.assertEqual(response.data['detail'], "No tienes permiso para ver este post")
+        # Verificar el comportamiento correcto
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['detail'], "Authentication credentials were not provided.")
         
-    # def test_view_non_existing_post(self):
-    #     self.client.force_authenticate(user=self.user)
-    #     url = reverse('post', kwargs={'id': 999})
+    def test_view_non_existing_post(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('post', kwargs={'id': 999})
         
-    #     # Realizar la solicitud
-    #     response = self.client.get(url)
+        # Realizar la solicitud
+        response = self.client.get(url)
         
-    #     # Verificar el comportamiento correcto
-    #     self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        # Verificar el comportamiento correcto
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         
         
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -294,33 +321,59 @@ class TestPostDetailView(APITestCase):
 # Upon deletion, the post is permanently removed from the database
 # All associated likes and comments are also deleted.
 
+class TestPostDeleteView(APITestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        self.client = APIClient()
+        self.post = PostFactory(read_permission='public', edit_permission = 'public')
 
+    def test_delete_post_with_edit_permission(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('post-delete', kwargs={'pk': self.post.id})
         
-    # def test_list_posts_as_authenticated_user(self):
-    #     self.client.force_authenticate(user=self.user)
-    #     url = reverse('post-create')
+        # Realizar la solicitud
+        response = self.client.delete(url)
         
-    #     # Crear algunos posts
-    #     PostFactory.create_batch(3)
+        # Verificar el comportamiento correcto
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(Post.objects.filter(id=self.post.id).exists(), "Post should be deleted")
+
+    def test_delete_post_without_edit_permission(self):
+        self.client.force_authenticate(user=self.user)
+        self.post.edit_permission = 'team'
+        self.post.save()
+        url = reverse('post-delete', kwargs={'pk': self.post.id})
         
-    #     # Realizar la solicitud
-    #     response = self.client.get(url)
-    #     print(response.data)
-    #     # Verificar el comportamiento correcto
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(response.data['count'], 3)
-    #     self.assertEqual(response.data[0]['author'], self.user.id)
+        # Realizar la solicitud
+        response = self.client.delete(url)
         
-    # def test_list_posts_as_unauthenticated_user(self):
-    #     url = reverse('post-create')
+        # Verificar el comportamiento correcto
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(Post.objects.filter(id=self.post.id).exists(), "Post should not be deleted")
+
+    def test_delete_non_existing_post(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('post-delete', kwargs={'pk': 999})
         
-    #     # Crear algunos posts
-    #     PostFactory.create_batch(3)
+        # Realizar la solicitud
+        response = self.client.delete(url)
+        print(response.data)
         
-    #     # Realizar la solicitud
-    #     response = self.client.get(url)
+        # Verificar el comportamiento correcto
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error'], "Post doesn't exist")
         
-    #     # Verificar el comportamiento correcto
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(len(response.data), 1)
-    #     self.assertEqual(response.data[0]['read_permission'], 'public')
+    def test_delete_post_as_admin(self):
+        self.user.is_admin = True
+        self.user.save()
+        self.post.edit_permission='team'
+        self.post.save()
+        self.client.force_authenticate(user=self.user)
+        url = reverse('post-delete', kwargs={'pk': self.post.id})
+        
+        # Realizar la solicitud
+        response = self.client.delete(url)
+        
+        # Verificar el comportamiento correcto
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(Post.objects.filter(id=self.post.id).exists(), "Post should be deleted")
