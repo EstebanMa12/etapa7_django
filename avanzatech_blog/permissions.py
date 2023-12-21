@@ -1,10 +1,24 @@
 from rest_framework.permissions import BasePermission, DjangoObjectPermissions
 from posts.models import Post
 class UserHasEditPermission(BasePermission):
+    """
+    Custom permission class to check if a user has edit permission for a post.
+    """
     message = "You do not have permission to perform this action."
     def has_object_permission(self, request, view, obj):
+        """
+        Check if the user has edit permission for the given post object.
+
+        Args:
+            request (HttpRequest): The request object.
+            view (View): The view object.
+            obj (Post): The post object.
+
+        Returns:
+            bool: True if the user has edit permission, False otherwise.
+        """
         if request.user.is_authenticated:
-            # Comprueba cuales son los permisos de edicion del post
+            # Check the edit permissions of the post
             if request.user.is_admin:
                 return True
             elif obj.edit_permission == Post.PUBLIC:
@@ -16,13 +30,24 @@ class UserHasEditPermission(BasePermission):
             elif obj.edit_permission == Post.AUTHOR:
                 return request.user == obj.author
         else:
-            # Si el usuario no está autenticado, puede editar los post con permisos de edicion 'public'
+            # If the user is not authenticated, they can edit posts with 'public' edit permission
             if obj.edit_permission == Post.PUBLIC:
                 return True
             
         return False
         
 class UserHasReadPermission(BasePermission):
+    """
+    Custom permission class to check if a user has read permission for an object.
+
+    This permission class checks if the user is authenticated and has the necessary permissions
+    to read the object. It considers different scenarios based on the read_permission attribute
+    of the object and the user's role.
+
+    Attributes:
+        message (str): The error message to be displayed when the user does not have permission.
+    """
+
     message = "You do not have permission to perform this action."   
     def has_object_permission(self, request, view, obj):
         # Comprueba cuales son los permisos de lectura del post
@@ -42,37 +67,6 @@ class UserHasReadPermission(BasePermission):
 
         return False
 
-class PostObjectPermissions(DjangoObjectPermissions):
-    # Sobreescribe el método has_object_permission para que se ajuste a los permisos de lectura y edición de los posts
-    def has_object_permission(self, request, view, obj):
-        # Asegúrate de que obj es una instancia de Post
-        if not isinstance(obj, Post):
-            return False
-
-        # Comprueba los permisos de lectura si la solicitud es GET
-        if request.method == 'GET':
-            if obj.read_permission == Post.PUBLIC:
-                return True
-            elif obj.read_permission == Post.AUTHENTICATED and request.user.is_authenticated:
-                return True
-            elif obj.read_permission == Post.TEAM and request.user.team == obj.author.team:
-                return True
-            elif obj.read_permission == Post.AUTHOR and request.user == obj.author:
-                return True
-
-        # Comprueba los permisos de edición si la solicitud es PUT, PATCH o DELETE
-        elif request.method in ['PUT', 'PATCH', 'DELETE']:
-            if obj.edit_permission == Post.PUBLIC:
-                return True
-            elif obj.edit_permission == Post.AUTHENTICATED and request.user.is_authenticated:
-                return True
-            elif obj.edit_permission == Post.TEAM and request.user.team == obj.author.team:
-                return True
-            elif obj.edit_permission == Post.AUTHOR and request.user == obj.author:
-                return True
-
-        # Si ninguna de las condiciones anteriores se cumple, el usuario no tiene permiso
-        return False
 
 class IsCustomAdminUser(BasePermission):
     """

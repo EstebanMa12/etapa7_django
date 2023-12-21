@@ -12,3 +12,16 @@ urlpatterns = [
     path('comments/', include('comments.urls')),
     path('docs/', include_docs_urls(title='Avanzatech Blog Documentation')),
 ]
+
+"""
+URL patterns for the Avanzatech Blog application.
+
+Includes the following patterns:
+- 'admin/' for the Django admin site
+- 'user/' for user-related URLs
+- '' for post-related URLs
+- 'likes/' for like-related URLs
+- 'comments/' for comment-related URLs
+- 'docs/' for the Avanzatech Blog documentation
+
+"""

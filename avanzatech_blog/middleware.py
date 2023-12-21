@@ -2,6 +2,9 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 
 class AutoReadPermissionMiddleware:
+    """
+    Middleware class that automatically grants read permission to users who have edit permission on posts.
+    """
     def __init__(self, get_response):
         self.get_response = get_response
         
