@@ -1,7 +1,7 @@
 # The great API for a AvanzatechBlog
 
 ## Introduction
-This is the official documentation of the Avanzatech Blog API. It provides detailed information about each - Endpoint, including method description, request and response formats, and examples
+This is the official documentation of the Avanzatech Blog API. It provides detailed information about each - Endpoint, including method description, request and response formats.
 
 ## Requeriments
 - Python 3.6+
@@ -101,4 +101,11 @@ Admin Panel: Access the administration panel via <code> admin/.</code>
 ### Documentation:
 
     Access API documentation: docs/
+
+### Tests
+To run tests, use the following command:
+
+    pytest
+
+
 
