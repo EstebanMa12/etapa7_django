@@ -45,7 +45,7 @@ python manage.py runserver # To deploy
 - Endpoint:<code> blog/<int:id></code> [name='post-edit']
 
     - Description: Allows editing of the post identified by the provided ID.
-<code>- Endpoint: <code>post/<int:post_id>/like/</code> [name='like-create-delete']</code>
+- Endpoint: <code>post/<int:post_id>/like/</code> [name='like-create-delete']
 
     - Description: Enables liking or unliking a post, provided the user has read permissions. Users can like a post only once.
 - Endpoint: <code>post/<int:post_id>/comment</code> [name='comment-create-delete']
